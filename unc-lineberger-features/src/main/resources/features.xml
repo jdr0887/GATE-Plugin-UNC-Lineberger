@@ -1,0 +1,12 @@
+<features name="gate-plugin-unc-lineberger-${project.version}">
+
+  <feature name="gate-plugin-unc-lineberger" version="${project.version}" resolver="(obr)">
+    <bundle>mvn:org.renci.gate.plugin.unc.lineberger/unc-lineberger-service/${project.version}</bundle>
+  </feature>
+
+</features>
+
+
+
+
+

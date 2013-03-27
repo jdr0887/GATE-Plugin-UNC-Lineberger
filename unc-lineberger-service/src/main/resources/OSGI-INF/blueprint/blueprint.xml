@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0" default-activation="lazy">
+
+  <cm:property-placeholder persistent-id="org.renci.gate.plugin.lineberger" update-strategy="reload">
+    <cm:default-properties>
+      <cm:property name="collectorHost" value="biodev1.its.unc.edu" />
+      <cm:property name="activeQueues" value="all.q" />
+      <cm:property name="username" value="" />
+    </cm:default-properties>
+  </cm:property-placeholder>
+
+  <bean id="all.q" class="org.renci.gate.QueueInfo">
+    <property name="name" value="all.q" />
+    <property name="weight" value="1" />
+    <property name="maxJobLimit" value="64" />
+    <property name="maxMultipleJobsToSubmit" value="3" />
+    <property name="pendingTime" value="1440" />
+    <property name="runTime" value="2880" />
+  </bean>
+
+  <bean id="test.q" class="org.renci.gate.QueueInfo">
+    <property name="name" value="test.q" />
+    <property name="weight" value="1" />
+    <property name="maxJobLimit" value="8" />
+    <property name="maxMultipleJobsToSubmit" value="1" />
+    <property name="pendingTime" value="1440" />
+    <property name="runTime" value="2880" />
+  </bean>
+
+  <bean id="site" class="org.renci.jlrm.Site">
+    <property name="name" value="Lineberger" />
+    <property name="project" value="TCGA" />
+    <property name="username" value="${username}" />
+    <property name="submitHost" value="swprod.bioinf.unc.edu" />
+    <property name="maxTotalPending" value="6" />
+    <property name="maxTotalRunning" value="30" />
+    <property name="queueInfoMap">
+      <map>
+        <entry key="all.q" value-ref="all.q" />
+      </map>
+    </property>
+  </bean>
+
+  <bean id="linebergerGATEService" class="org.renci.gate.plugin.lineberger.LinebergerGATEService">
+    <property name="site" ref="site" />
+    <property name="collectorHost" value="${collectorHost}" />
+    <property name="activeQueues" value="${activeQueues}" />
+    <cm:managed-properties persistent-id="org.renci.gate.plugin.lineberger" update-strategy="container-managed" />
+  </bean>
+
+  <service ref="linebergerGATEService" interface="org.renci.gate.GATEService" />
+
+</blueprint>
