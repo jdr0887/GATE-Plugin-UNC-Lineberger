@@ -32,7 +32,7 @@
   <url>http://ci-dev.renci.org/site/gate/project-info.html</url>
   <issueManagement>
     <system>gForge</system>
-    <url>https://code.renci.org/gf/project/g_p_lineberger/tracker/</url>
+    <url>https://code.renci.org/gf/project/g_p_u_lbg/tracker/</url>
   </issueManagement>
   <ciManagement>
     <system>hudson</system>
@@ -56,8 +56,8 @@
     </license>
   </licenses>
   <scm>
-    <developerConnection>scm:git:ssh://${user.name}@code.renci.org/gitroot/g_p_lineberger</developerConnection>
-    <connection>scm:git:ssh://developername@code.renci.org/gitroot/g_p_lineberger</connection>
+    <developerConnection>scm:git:ssh://${user.name}@code.renci.org/gitroot/g_p_u_lbg</developerConnection>
+    <connection>scm:git:ssh://developername@code.renci.org/gitroot/g_p_u_lbg</connection>
   </scm>
   <repositories>
     <repository>
