@@ -108,9 +108,9 @@ public class LinebergerGATEService extends AbstractGATEService {
         submitDir.mkdirs();
         SGESSHJob job = null;
         try {
-            SGESSHFactory lsfSSHFactory = SGESSHFactory.getInstance(getSite());
+            SGESSHFactory factory = SGESSHFactory.getInstance(getSite());
             String hostAllow = "*.its.unc.edu";
-            job = lsfSSHFactory.submitGlidein(submitDir, getCollectorHost(), queue, 40, hostAllow, hostAllow);
+            job = factory.submitGlidein(submitDir, getCollectorHost(), queue, 40, "glidein", hostAllow, hostAllow);
             if (job != null && StringUtils.isNotEmpty(job.getId())) {
                 logger.info("job.getId(): {}", job.getId());
                 jobCache.add(job);
@@ -124,9 +124,9 @@ public class LinebergerGATEService extends AbstractGATEService {
     public void deleteGlidein(Queue queue) {
         if (jobCache.size() > 0) {
             try {
-                SGESSHFactory sgeSSHFactory = SGESSHFactory.getInstance(getSite());
+                SGESSHFactory factory = SGESSHFactory.getInstance(getSite());
                 SGESSHJob job = jobCache.get(0);
-                sgeSSHFactory.killGlidein(job);
+                factory.killGlidein(job);
                 jobCache.remove(0);
             } catch (JLRMException e) {
                 e.printStackTrace();
