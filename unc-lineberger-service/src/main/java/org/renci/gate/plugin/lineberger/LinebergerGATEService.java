@@ -13,6 +13,7 @@ import java.util.concurrent.Executors;
 
 import org.apache.commons.lang.StringUtils;
 import org.renci.gate.AbstractGATEService;
+import org.renci.gate.GATEException;
 import org.renci.gate.GlideinMetric;
 import org.renci.jlrm.Queue;
 import org.renci.jlrm.sge.SGEJobStatusInfo;
@@ -38,7 +39,7 @@ public class LinebergerGATEService extends AbstractGATEService {
     }
 
     @Override
-    public Map<String, GlideinMetric> lookupMetrics() {
+    public Map<String, GlideinMetric> lookupMetrics() throws GATEException {
         Map<String, GlideinMetric> metricsMap = new HashMap<String, GlideinMetric>();
 
         try {
@@ -90,15 +91,15 @@ public class LinebergerGATEService extends AbstractGATEService {
                     }
                 }
             }
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+        } catch (Exception e ) {
+            throw new GATEException(e);
         }
 
         return metricsMap;
     }
 
     @Override
-    public void createGlidein(Queue queue) {
+    public void createGlidein(Queue queue) throws GATEException {
         logger.info("ENTERING createGlidein(Queue)");
 
         if (StringUtils.isNotEmpty(getActiveQueues()) && !getActiveQueues().contains(queue.getName())) {
@@ -110,7 +111,7 @@ public class LinebergerGATEService extends AbstractGATEService {
         submitDir.mkdirs();
         SGESSHJob job = null;
 
-        String hostAllow = "*.its.unc.edu";
+        String hostAllow = "*.unc.edu";
         SGESSHSubmitCondorGlideinCallable callable = new SGESSHSubmitCondorGlideinCallable(getSite(), queue, submitDir,
                 "glidein", getCollectorHost(), hostAllow, hostAllow, 40);
         try {
@@ -119,27 +120,27 @@ public class LinebergerGATEService extends AbstractGATEService {
                 logger.info("job.getId(): {}", job.getId());
                 jobCache.add(job);
             }
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+        } catch (Exception e ) {
+            throw new GATEException(e);
         }
     }
 
     @Override
-    public void deleteGlidein(Queue queue) {
+    public void deleteGlidein(Queue queue) throws GATEException {
         if (jobCache.size() > 0) {
             try {
                 SGESSHJob job = jobCache.get(0);
                 SGESSHKillCallable callable = new SGESSHKillCallable(getSite(), job);
                 Executors.newSingleThreadExecutor().submit(callable).get();
                 jobCache.remove(0);
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
+            } catch (Exception e ) {
+                throw new GATEException(e);
             }
         }
     }
 
     @Override
-    public void deletePendingGlideins() {
+    public void deletePendingGlideins() throws GATEException {
         try {
             SGESSHLookupStatusCallable lookupStatusCallable = new SGESSHLookupStatusCallable(getSite(), jobCache);
             Set<SGEJobStatusInfo> jobStatusSet = Executors.newSingleThreadExecutor().submit(lookupStatusCallable).get();
@@ -150,8 +151,8 @@ public class LinebergerGATEService extends AbstractGATEService {
                         break;
                 }
             }
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+        } catch (Exception e ) {
+            throw new GATEException(e);
         }
     }
 
