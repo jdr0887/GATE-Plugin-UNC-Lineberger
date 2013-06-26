@@ -1,11 +1,8 @@
 package org.renci.gate.plugin.lineberger;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -17,7 +14,6 @@ import org.renci.gate.GATEException;
 import org.renci.gate.GlideinMetric;
 import org.renci.jlrm.Queue;
 import org.renci.jlrm.sge.SGEJobStatusInfo;
-import org.renci.jlrm.sge.ssh.SGESSHJob;
 import org.renci.jlrm.sge.ssh.SGESSHKillCallable;
 import org.renci.jlrm.sge.ssh.SGESSHLookupStatusCallable;
 import org.renci.jlrm.sge.ssh.SGESSHSubmitCondorGlideinCallable;
@@ -32,70 +28,63 @@ public class LinebergerGATEService extends AbstractGATEService {
 
     private final Logger logger = LoggerFactory.getLogger(LinebergerGATEService.class);
 
-    private final List<SGESSHJob> jobCache = new ArrayList<SGESSHJob>();
-
     public LinebergerGATEService() {
         super();
     }
 
     @Override
     public Map<String, GlideinMetric> lookupMetrics() throws GATEException {
+        logger.info("ENTERING lookupMetrics()");
         Map<String, GlideinMetric> metricsMap = new HashMap<String, GlideinMetric>();
 
         try {
-            SGESSHLookupStatusCallable callable = new SGESSHLookupStatusCallable(getSite(), jobCache);
+            SGESSHLookupStatusCallable callable = new SGESSHLookupStatusCallable(getSite());
             Set<SGEJobStatusInfo> jobStatusSet = Executors.newSingleThreadExecutor().submit(callable).get();
+            logger.debug("jobStatusSet.size(): {}", jobStatusSet.size());
 
             // get unique list of queues
             Set<String> queueSet = new HashSet<String>();
-            if (jobStatusSet != null) {
+            if (jobStatusSet != null && jobStatusSet.size() > 0) {
                 for (SGEJobStatusInfo info : jobStatusSet) {
-                    queueSet.add(info.getQueue());
-                }
-            }
-
-            Iterator<SGESSHJob> jobCacheIter = jobCache.iterator();
-            while (jobCacheIter.hasNext()) {
-                SGESSHJob job = jobCacheIter.next();
-                for (String queue : queueSet) {
-                    int running = 0;
-                    int pending = 0;
-                    for (SGEJobStatusInfo info : jobStatusSet) {
-                        GlideinMetric metrics = new GlideinMetric();
-                        if (info.getQueue().equals(queue) && job.getId().equals(info.getJobId())) {
-                            switch (info.getType()) {
-                                case WAITING:
-                                    ++pending;
-                                    break;
-                                case RUNNING:
-                                    ++running;
-                                    break;
-                                case DELETION:
-                                case ERROR:
-                                case DONE:
-                                case THRESHOLD:
-                                    jobCacheIter.remove();
-                                    break;
-                                case SUSPENDED:
-                                case HOLD:
-                                case RESTARTED:
-                                case TRANSFERING:
-                                default:
-                                    break;
-                            }
-                        }
-                        metrics.setQueue(queue);
-                        metrics.setPending(pending);
-                        metrics.setRunning(running);
-                        metricsMap.put(queue, metrics);
+                    if (!queueSet.contains(info.getQueue())) {
+                        queueSet.add(info.getQueue());
                     }
                 }
+
+                for (SGEJobStatusInfo info : jobStatusSet) {
+                    if (metricsMap.containsKey(info.getQueue())) {
+                        continue;
+                    }
+                    if (!"glidein".equals(info.getJobName())) {
+                        continue;
+                    }
+                    metricsMap.put(info.getQueue(), new GlideinMetric(0, 0, info.getQueue()));
+                }
+
+                for (SGEJobStatusInfo info : jobStatusSet) {
+
+                    if (!"glidein".equals(info.getJobName())) {
+                        continue;
+                    }
+
+                    switch (info.getType()) {
+                        case WAITING:
+                            metricsMap.get(info.getQueue()).incrementPending();
+                            break;
+                        case RUNNING:
+                            metricsMap.get(info.getQueue()).incrementRunning();
+                            break;
+                    }
+                }
+
             }
-        } catch (Exception e ) {
+
+        } catch (Exception e) {
             throw new GATEException(e);
         }
 
         return metricsMap;
+
     }
 
     @Override
@@ -103,46 +92,48 @@ public class LinebergerGATEService extends AbstractGATEService {
         logger.info("ENTERING createGlidein(Queue)");
 
         if (StringUtils.isNotEmpty(getActiveQueues()) && !getActiveQueues().contains(queue.getName())) {
-            logger.warn("queue name is not in active queue list...see etc/org.renci.gate.plugin.kure.cfg");
+            logger.warn("queue name is not in active queue list...see etc/org.renci.gate.plugin.lineberger.cfg");
             return;
         }
 
         File submitDir = new File("/tmp", System.getProperty("user.name"));
         submitDir.mkdirs();
-        SGESSHJob job = null;
 
-        String hostAllow = "*.unc.edu";
-        SGESSHSubmitCondorGlideinCallable callable = new SGESSHSubmitCondorGlideinCallable(getSite(), queue, submitDir,
-                "glidein", getCollectorHost(), hostAllow, hostAllow, 40);
         try {
-            job = Executors.newSingleThreadExecutor().submit(callable).get();
-            if (job != null && StringUtils.isNotEmpty(job.getId())) {
-                logger.info("job.getId(): {}", job.getId());
-                jobCache.add(job);
-            }
-        } catch (Exception e ) {
+            String hostAllow = "*.unc.edu";
+            SGESSHSubmitCondorGlideinCallable callable = new SGESSHSubmitCondorGlideinCallable();
+            callable.setCollectorHost(getCollectorHost());
+            callable.setUsername(System.getProperty("user.name"));
+            callable.setSite(getSite());
+            callable.setJobName("glidein");
+            callable.setQueue(queue);
+            callable.setSubmitDir(submitDir);
+            callable.setRequiredMemory(40);
+            callable.setHostAllowRead(hostAllow);
+            callable.setHostAllowWrite(hostAllow);
+            Executors.newSingleThreadExecutor().submit(callable).get();
+        } catch (InterruptedException | ExecutionException e) {
             throw new GATEException(e);
         }
+
     }
 
     @Override
     public void deleteGlidein(Queue queue) throws GATEException {
-        if (jobCache.size() > 0) {
-            try {
-                SGESSHJob job = jobCache.get(0);
-                SGESSHKillCallable callable = new SGESSHKillCallable(getSite(), job);
-                Executors.newSingleThreadExecutor().submit(callable).get();
-                jobCache.remove(0);
-            } catch (Exception e ) {
-                throw new GATEException(e);
-            }
+        try {
+            SGESSHLookupStatusCallable lookupStatusCallable = new SGESSHLookupStatusCallable(getSite());
+            Set<SGEJobStatusInfo> jobStatusSet = Executors.newSingleThreadExecutor().submit(lookupStatusCallable).get();
+            SGESSHKillCallable callable = new SGESSHKillCallable(getSite(), jobStatusSet.iterator().next().getJobId());
+            Executors.newSingleThreadExecutor().submit(callable).get();
+        } catch (Exception e) {
+            throw new GATEException(e);
         }
     }
 
     @Override
     public void deletePendingGlideins() throws GATEException {
         try {
-            SGESSHLookupStatusCallable lookupStatusCallable = new SGESSHLookupStatusCallable(getSite(), jobCache);
+            SGESSHLookupStatusCallable lookupStatusCallable = new SGESSHLookupStatusCallable(getSite());
             Set<SGEJobStatusInfo> jobStatusSet = Executors.newSingleThreadExecutor().submit(lookupStatusCallable).get();
             for (SGEJobStatusInfo info : jobStatusSet) {
                 switch (info.getType()) {
@@ -151,7 +142,7 @@ public class LinebergerGATEService extends AbstractGATEService {
                         break;
                 }
             }
-        } catch (Exception e ) {
+        } catch (Exception e) {
             throw new GATEException(e);
         }
     }
