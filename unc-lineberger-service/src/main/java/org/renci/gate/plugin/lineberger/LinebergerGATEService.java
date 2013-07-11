@@ -33,6 +33,12 @@ public class LinebergerGATEService extends AbstractGATEService {
     }
 
     @Override
+    public Boolean isValid() throws GATEException {
+        logger.info("ENTERING isValid()");
+        return true;
+    }
+
+    @Override
     public Map<String, GlideinMetric> lookupMetrics() throws GATEException {
         logger.info("ENTERING lookupMetrics()");
         Map<String, GlideinMetric> metricsMap = new HashMap<String, GlideinMetric>();
