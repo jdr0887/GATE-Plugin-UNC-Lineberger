@@ -43,6 +43,13 @@ public class LinebergerGATEService extends AbstractGATEService {
         logger.info("ENTERING lookupMetrics()");
         Map<String, GlideinMetric> metricsMap = new HashMap<String, GlideinMetric>();
 
+        //stub out the metricsMap
+        Map<String, Queue> queueInfoMap = getSite().getQueueInfoMap();
+        for (String key : queueInfoMap.keySet()) {
+            Queue queue = queueInfoMap.get(key);
+            metricsMap.put(queue.getName(), new GlideinMetric(0, 0, queue.getName()));
+        }
+
         try {
             SGESSHLookupStatusCallable callable = new SGESSHLookupStatusCallable(getSite());
             Set<SGEJobStatusInfo> jobStatusSet = Executors.newSingleThreadExecutor().submit(callable).get();
