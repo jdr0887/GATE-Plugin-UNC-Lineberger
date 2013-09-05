@@ -36,10 +36,10 @@
     <property name="submitHost" value="swprod.bioinf.unc.edu" />
     <property name="maxTotalPending" value="6" />
     <property name="maxTotalRunning" value="30" />
-    <property name="queueInfoMap">
-      <map>
-        <entry key="all.q" value-ref="all.q" />
-      </map>
+    <property name="queueList">
+      <list>
+        <ref component-id="all.q" value-ref="all.q" />
+      </list>
     </property>
   </bean>
 
