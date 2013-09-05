@@ -1,8 +1,9 @@
 package org.renci.gate.plugin.lineberger;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -39,15 +40,13 @@ public class LinebergerGATEService extends AbstractGATEService {
     }
 
     @Override
-    public Map<String, GlideinMetric> lookupMetrics() throws GATEException {
+    public List<GlideinMetric> lookupMetrics() throws GATEException {
         logger.info("ENTERING lookupMetrics()");
         Map<String, GlideinMetric> metricsMap = new HashMap<String, GlideinMetric>();
 
-        //stub out the metricsMap
-        Map<String, Queue> queueInfoMap = getSite().getQueueInfoMap();
-        for (String key : queueInfoMap.keySet()) {
-            Queue queue = queueInfoMap.get(key);
-            metricsMap.put(queue.getName(), new GlideinMetric(0, 0, queue.getName()));
+        List<Queue> queueList = getSite().getQueueList();
+        for (Queue queue : queueList) {
+            metricsMap.put(queue.getName(), new GlideinMetric(getSite().getName(), queue.getName(), 0, 0));
         }
 
         try {
@@ -55,24 +54,7 @@ public class LinebergerGATEService extends AbstractGATEService {
             Set<SGEJobStatusInfo> jobStatusSet = Executors.newSingleThreadExecutor().submit(callable).get();
             logger.debug("jobStatusSet.size(): {}", jobStatusSet.size());
 
-            // get unique list of queues
-            Set<String> queueSet = new HashSet<String>();
             if (jobStatusSet != null && jobStatusSet.size() > 0) {
-                for (SGEJobStatusInfo info : jobStatusSet) {
-                    if (!queueSet.contains(info.getQueue())) {
-                        queueSet.add(info.getQueue());
-                    }
-                }
-
-                for (SGEJobStatusInfo info : jobStatusSet) {
-                    if (metricsMap.containsKey(info.getQueue())) {
-                        continue;
-                    }
-                    if (!"glidein".equals(info.getJobName())) {
-                        continue;
-                    }
-                    metricsMap.put(info.getQueue(), new GlideinMetric(0, 0, info.getQueue()));
-                }
 
                 for (SGEJobStatusInfo info : jobStatusSet) {
 
@@ -96,8 +78,10 @@ public class LinebergerGATEService extends AbstractGATEService {
             throw new GATEException(e);
         }
 
-        return metricsMap;
+        List<GlideinMetric> metricList = new ArrayList<GlideinMetric>();
+        metricList.addAll(metricsMap.values());
 
+        return metricList;
     }
 
     @Override
@@ -151,7 +135,8 @@ public class LinebergerGATEService extends AbstractGATEService {
             for (SGEJobStatusInfo info : jobStatusSet) {
                 switch (info.getType()) {
                     case WAITING:
-                        deleteGlidein(getSite().getQueueInfoMap().get(info.getQueue()));
+                        SGESSHKillCallable callable = new SGESSHKillCallable(getSite(), info.getJobId());
+                        Executors.newSingleThreadExecutor().submit(callable).get();
                         break;
                 }
             }
