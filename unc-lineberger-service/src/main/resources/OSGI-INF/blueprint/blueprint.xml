@@ -4,6 +4,7 @@
 
   <cm:property-placeholder persistent-id="org.renci.gate.plugin.lineberger" update-strategy="reload">
     <cm:default-properties>
+      <cm:property name="submitHost" value="swprod.bioinf.unc.edu" />
       <cm:property name="collectorHost" value="biodev1.its.unc.edu" />
       <cm:property name="activeQueues" value="all.q" />
       <cm:property name="username" value="" />
@@ -13,29 +14,26 @@
   <bean id="all.q" class="org.renci.gate.QueueInfo">
     <property name="name" value="all.q" />
     <property name="weight" value="1" />
-    <property name="maxJobLimit" value="64" />
-    <property name="maxMultipleJobsToSubmit" value="3" />
-    <property name="pendingTime" value="1440" />
-    <property name="runTime" value="2880" />
+    <property name="maxPending" value="2" />
+    <property name="maxRunning" value="16" />
+    <property name="runTime" value="5760" />
+    <property name="numberOfProcessors" value="8" />
   </bean>
 
   <bean id="test.q" class="org.renci.gate.QueueInfo">
     <property name="name" value="test.q" />
     <property name="weight" value="1" />
-    <property name="maxJobLimit" value="8" />
-    <property name="maxMultipleJobsToSubmit" value="1" />
-    <property name="pendingTime" value="1440" />
-    <property name="runTime" value="2880" />
+    <property name="maxPending" value="2" />
+    <property name="maxRunning" value="8" />
+    <property name="runTime" value="5760" />
+    <property name="numberOfProcessors" value="8" />
   </bean>
 
   <bean id="site" class="org.renci.jlrm.Site">
     <property name="name" value="Lineberger" />
     <property name="project" value="TCGA" />
-    <property name="numberOfProcessors" value="8" />
     <property name="username" value="${username}" />
-    <property name="submitHost" value="swprod.bioinf.unc.edu" />
-    <property name="maxTotalPending" value="6" />
-    <property name="maxTotalRunning" value="30" />
+    <property name="submitHost" value="${submitHost}" />
     <property name="queueList">
       <list>
         <ref component-id="all.q" value-ref="all.q" />
