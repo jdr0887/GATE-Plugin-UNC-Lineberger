@@ -2,13 +2,13 @@
   <parent>
     <groupId>org.renci.gate.plugins.unc</groupId>
     <artifactId>lineberger</artifactId>
-    <version>0.2.7-SNAPSHOT</version>
+    <version>0.2.7</version>
   </parent>
   <name>GATE :: Plugins :: UNC :: Lineberger :: Features</name>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.renci.gate.plugins.unc.lineberger</groupId>
   <artifactId>unc-lineberger-features</artifactId>
-  <version>0.2.7-SNAPSHOT</version>
+  <version>0.2.7</version>
   <packaging>pom</packaging>
   <build>
     <plugins>
