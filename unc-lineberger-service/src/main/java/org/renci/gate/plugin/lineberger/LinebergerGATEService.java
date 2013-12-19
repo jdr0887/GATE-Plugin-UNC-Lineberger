@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
-import org.apache.commons.lang.StringUtils;
 import org.renci.gate.AbstractGATEService;
 import org.renci.gate.GATEException;
 import org.renci.gate.GlideinMetric;
