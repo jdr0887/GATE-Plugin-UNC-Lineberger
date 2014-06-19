@@ -3,6 +3,7 @@ package org.renci.gate.service.lineberger;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,6 +15,7 @@ import org.renci.gate.GATEException;
 import org.renci.gate.GlideinMetric;
 import org.renci.jlrm.Queue;
 import org.renci.jlrm.sge.SGEJobStatusInfo;
+import org.renci.jlrm.sge.SGEJobStatusType;
 import org.renci.jlrm.sge.ssh.SGESSHKillCallable;
 import org.renci.jlrm.sge.ssh.SGESSHLookupStatusCallable;
 import org.renci.jlrm.sge.ssh.SGESSHSubmitCondorGlideinCallable;
@@ -114,8 +116,19 @@ public class LinebergerGATEService extends AbstractGATEService {
         try {
             SGESSHLookupStatusCallable lookupStatusCallable = new SGESSHLookupStatusCallable(getSite());
             Set<SGEJobStatusInfo> jobStatusSet = Executors.newSingleThreadExecutor().submit(lookupStatusCallable).get();
-            SGESSHKillCallable callable = new SGESSHKillCallable(getSite(), jobStatusSet.iterator().next().getJobId());
-            Executors.newSingleThreadExecutor().submit(callable).get();
+
+            Iterator<SGEJobStatusInfo> iter = jobStatusSet.iterator();
+            while (iter.hasNext()) {
+                SGEJobStatusInfo info = iter.next();
+                if (!info.getJobName().equals("glidein")) {
+                    continue;
+                }
+                logger.debug("deleting: {}", info.toString());
+                SGESSHKillCallable killCallable = new SGESSHKillCallable(getSite(), info.getJobId());
+                Executors.newSingleThreadExecutor().submit(killCallable).get();
+                // only delete one...engine will trigger next deletion
+                break;
+            }
         } catch (Exception e) {
             throw new GATEException(e);
         }
@@ -127,11 +140,15 @@ public class LinebergerGATEService extends AbstractGATEService {
             SGESSHLookupStatusCallable lookupStatusCallable = new SGESSHLookupStatusCallable(getSite());
             Set<SGEJobStatusInfo> jobStatusSet = Executors.newSingleThreadExecutor().submit(lookupStatusCallable).get();
             for (SGEJobStatusInfo info : jobStatusSet) {
-                switch (info.getType()) {
-                    case WAITING:
-                        SGESSHKillCallable callable = new SGESSHKillCallable(getSite(), info.getJobId());
-                        Executors.newSingleThreadExecutor().submit(callable).get();
-                        break;
+                if (!info.getJobName().equals("glidein")) {
+                    continue;
+                }
+                if (info.getType().equals(SGEJobStatusType.WAITING)) {
+                    logger.debug("deleting: {}", info.toString());
+                    SGESSHKillCallable callable = new SGESSHKillCallable(getSite(), info.getJobId());
+                    Executors.newSingleThreadExecutor().submit(callable).get();
+                    // throttle the deleteGlidein calls such that SSH doesn't complain
+                    Thread.sleep(2000);
                 }
             }
         } catch (Exception e) {
