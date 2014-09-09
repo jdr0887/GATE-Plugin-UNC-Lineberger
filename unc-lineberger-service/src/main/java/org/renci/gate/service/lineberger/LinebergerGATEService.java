@@ -36,13 +36,13 @@ public class LinebergerGATEService extends AbstractGATEService {
 
     @Override
     public Boolean isValid() throws GATEException {
-        logger.info("ENTERING isValid()");
+        logger.debug("ENTERING isValid()");
         return true;
     }
 
     @Override
     public List<GlideinMetric> lookupMetrics() throws GATEException {
-        logger.info("ENTERING lookupMetrics()");
+        logger.debug("ENTERING lookupMetrics()");
         Map<String, GlideinMetric> metricsMap = new HashMap<String, GlideinMetric>();
 
         List<Queue> queueList = getSite().getQueueList();
@@ -87,7 +87,7 @@ public class LinebergerGATEService extends AbstractGATEService {
 
     @Override
     public void createGlidein(Queue queue) throws GATEException {
-        logger.info("ENTERING createGlidein(Queue)");
+        logger.debug("ENTERING createGlidein(Queue)");
 
         File submitDir = new File("/tmp", System.getProperty("user.name"));
         submitDir.mkdirs();
