@@ -56,10 +56,11 @@ public class LinebergerGATEService extends AbstractGATEService {
             logger.debug("jobStatusSet.size(): {}", jobStatusSet.size());
 
             if (jobStatusSet != null && jobStatusSet.size() > 0) {
-
+                
+                String jobName = String.format("glidein-%s", getSite().getName().toLowerCase());
                 for (SGEJobStatusInfo info : jobStatusSet) {
 
-                    if (!info.getJobName().contains("glidein")) {
+                    if (!info.getJobName().equals(jobName)) {
                         continue;
                     }
 
@@ -118,9 +119,10 @@ public class LinebergerGATEService extends AbstractGATEService {
             Set<SGEJobStatusInfo> jobStatusSet = Executors.newSingleThreadExecutor().submit(lookupStatusCallable).get();
 
             Iterator<SGEJobStatusInfo> iter = jobStatusSet.iterator();
+            String jobName = String.format("glidein-%s", getSite().getName().toLowerCase());
             while (iter.hasNext()) {
                 SGEJobStatusInfo info = iter.next();
-                if (!info.getJobName().equals("glidein")) {
+                if (!info.getJobName().equals(jobName)) {
                     continue;
                 }
                 logger.debug("deleting: {}", info.toString());
@@ -139,8 +141,9 @@ public class LinebergerGATEService extends AbstractGATEService {
         try {
             SGESSHLookupStatusCallable lookupStatusCallable = new SGESSHLookupStatusCallable(getSite());
             Set<SGEJobStatusInfo> jobStatusSet = Executors.newSingleThreadExecutor().submit(lookupStatusCallable).get();
+            String jobName = String.format("glidein-%s", getSite().getName().toLowerCase());
             for (SGEJobStatusInfo info : jobStatusSet) {
-                if (!info.getJobName().equals("glidein")) {
+                if (!info.getJobName().equals(jobName)) {
                     continue;
                 }
                 if (info.getType().equals(SGEJobStatusType.WAITING)) {
