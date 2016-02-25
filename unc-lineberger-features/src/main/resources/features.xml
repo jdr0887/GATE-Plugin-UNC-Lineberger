@@ -1,7 +1,6 @@
 <features name="gate-plugin-unc-lineberger-${project.version}">
 
   <feature name="gate-plugin-unc-lineberger" version="${project.version}" resolver="(obr)">
-    <bundle>mvn:org.renci.gate.plugins.unc.lineberger/unc-lineberger-commands/${project.version}</bundle>
     <bundle>mvn:org.renci.gate.plugins.unc.lineberger/unc-lineberger-service/${project.version}</bundle>
   </feature>
 
