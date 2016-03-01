@@ -7,6 +7,7 @@
       <cm:property name="submitHost" value="swprod.bioinf.unc.edu" />
       <cm:property name="collectorHost" value="biodev1.its.unc.edu" />
       <cm:property name="activeQueues" value="all.q" />
+      <cm:property name="hostAllow" value="*.unc.edu" />
       <cm:property name="username" value="" />
     </cm:default-properties>
   </cm:property-placeholder>
@@ -45,6 +46,7 @@
     <property name="site" ref="site" />
     <property name="collectorHost" value="${collectorHost}" />
     <property name="activeQueues" value="${activeQueues}" />
+    <property name="hostAllow" value="${hostAllow}" />
     <cm:managed-properties persistent-id="org.renci.gate.service.lineberger" update-strategy="container-managed" />
   </bean>
 
