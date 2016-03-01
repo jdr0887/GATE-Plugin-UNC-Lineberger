@@ -10,7 +10,6 @@ import org.renci.jlrm.JLRMException;
 import org.renci.jlrm.Queue;
 import org.renci.jlrm.Site;
 import org.renci.jlrm.sge.ssh.SGESSHJob;
-import org.renci.jlrm.sge.ssh.SGESSHSubmitCondorGlideinCallable;
 
 @Command(scope = "unc-lineberger", name = "create-glidein", description = "Create Glidein")
 @Service
@@ -28,8 +27,12 @@ public class CreateGlideinAction implements Action {
     @Option(name = "--collectorHost", required = true, multiValued = false)
     private String collectorHost;
 
+    @Option(name = "--hostAllow", required = false, multiValued = false)
+    private String hostAllow;
+
     public CreateGlideinAction() {
         super();
+        this.hostAllow = "*.unc.edu";
     }
 
     @Override
@@ -47,7 +50,7 @@ public class CreateGlideinAction implements Action {
 
         File submitDir = new File("/tmp");
         try {
-            SGESSHSubmitCondorGlideinCallable callable = new SGESSHSubmitCondorGlideinCallable();
+            LinebergerSubmitCondorGlideinCallable callable = new LinebergerSubmitCondorGlideinCallable();
             callable.setSite(site);
             callable.setCollectorHost(collectorHost);
             callable.setUsername(System.getProperty("user.name"));
@@ -96,6 +99,14 @@ public class CreateGlideinAction implements Action {
 
     public void setCollectorHost(String collectorHost) {
         this.collectorHost = collectorHost;
+    }
+
+    public String getHostAllow() {
+        return hostAllow;
+    }
+
+    public void setHostAllow(String hostAllow) {
+        this.hostAllow = hostAllow;
     }
 
 }

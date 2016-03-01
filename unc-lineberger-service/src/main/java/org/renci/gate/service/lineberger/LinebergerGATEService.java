@@ -18,7 +18,6 @@ import org.renci.jlrm.sge.SGEJobStatusInfo;
 import org.renci.jlrm.sge.SGEJobStatusType;
 import org.renci.jlrm.sge.ssh.SGESSHKillCallable;
 import org.renci.jlrm.sge.ssh.SGESSHLookupStatusCallable;
-import org.renci.jlrm.sge.ssh.SGESSHSubmitCondorGlideinCallable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +55,7 @@ public class LinebergerGATEService extends AbstractGATEService {
             logger.debug("jobStatusSet.size(): {}", jobStatusSet.size());
 
             if (jobStatusSet != null && jobStatusSet.size() > 0) {
-                
+
                 String jobName = String.format("glidein-%s", getSite().getName().toLowerCase());
                 for (SGEJobStatusInfo info : jobStatusSet) {
 
@@ -94,8 +93,7 @@ public class LinebergerGATEService extends AbstractGATEService {
         submitDir.mkdirs();
 
         try {
-            String hostAllow = "*.unc.edu";
-            SGESSHSubmitCondorGlideinCallable callable = new SGESSHSubmitCondorGlideinCallable();
+            LinebergerSubmitCondorGlideinCallable callable = new LinebergerSubmitCondorGlideinCallable();
             callable.setCollectorHost(getCollectorHost());
             callable.setUsername(System.getProperty("user.name"));
             callable.setSite(getSite());
@@ -103,8 +101,8 @@ public class LinebergerGATEService extends AbstractGATEService {
             callable.setQueue(queue);
             callable.setSubmitDir(submitDir);
             callable.setRequiredMemory(40);
-            callable.setHostAllowRead(hostAllow);
-            callable.setHostAllowWrite(hostAllow);
+            callable.setHostAllowRead(getHostAllow());
+            callable.setHostAllowWrite(getHostAllow());
             Executors.newSingleThreadExecutor().submit(callable).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new GATEException(e);
